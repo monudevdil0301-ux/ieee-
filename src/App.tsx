@@ -99,9 +99,14 @@ const navItems = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('Overview');
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialTab = params?.get('tab') || 'Overview';
+  const initialSample = params?.get('sample') || 'solarClean';
+  const initialSampleData = SAMPLE_DATASETS[initialSample] || SAMPLE_DATASETS.solarClean;
+
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [claims, setClaims] = useState<Claim[]>(initialClaims);
-  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(initialClaims[0]);
+  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(params?.get('drawer') ? initialClaims[0] : null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [showNotice, setShowNotice] = useState(true);
   const [search, setSearch] = useState('');
@@ -114,12 +119,12 @@ export default function App() {
   const [blockHeight, setBlockHeight] = useState<number>(web3.getBlockHeight());
 
   // dMRV Studio State
-  const [selectedDatasetKey, setSelectedDatasetKey] = useState<string>('solarClean');
-  const [studioType, setStudioType] = useState<'Renewable energy' | 'Transport' | 'Waste management'>('Renewable energy');
-  const [studioClaimed, setStudioClaimed] = useState<number>(128.4);
-  const [studioProjectName, setStudioProjectName] = useState<string>('Rajasthan 250kW Solar Microgrid');
-  const [studioLocation, setStudioLocation] = useState<string>('Bikaner, Rajasthan, India');
-  const [studioCsv, setStudioCsv] = useState<string>(SAMPLE_DATASETS.solarClean.csvContent);
+  const [selectedDatasetKey, setSelectedDatasetKey] = useState<string>(initialSample);
+  const [studioType, setStudioType] = useState<'Renewable energy' | 'Transport' | 'Waste management'>(initialSampleData.type);
+  const [studioClaimed, setStudioClaimed] = useState<number>(initialSampleData.claimedTonnes);
+  const [studioProjectName, setStudioProjectName] = useState<string>(initialSampleData.name);
+  const [studioLocation, setStudioLocation] = useState<string>(initialSampleData.location);
+  const [studioCsv, setStudioCsv] = useState<string>(initialSampleData.csvContent);
   const [telemetryPoints, setTelemetryPoints] = useState<TelemetryPoint[]>([]);
   const [auditReport, setAuditReport] = useState<AiAuditReport | null>(null);
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
@@ -129,7 +134,21 @@ export default function App() {
   const [retireClaimTarget, setRetireClaimTarget] = useState<Claim | null>(null);
   const [beneficiaryName, setBeneficiaryName] = useState<string>('IEEE Climate Action Initiative');
   const [retirementReason, setRetirementReason] = useState<string>('COP31 Scope 2 Neutralization');
-  const [activeRetirementCert, setActiveRetirementCert] = useState<Claim | null>(null);
+  const [activeRetirementCert, setActiveRetirementCert] = useState<Claim | null>(
+    params?.get('cert') === 'true'
+      ? {
+          ...initialClaims[0],
+          status: 'Retired',
+          retirement: {
+            beneficiary: 'IEEE Climate Action Initiative',
+            reason: 'COP31 Scope 2 Neutralization Q3',
+            timestamp: '2026-10-22 14:30:00 UTC',
+            certificateHash: '0x7f8a9b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a',
+            retiredBy: '0x8fB4...d72E'
+          }
+        }
+      : null
+  );
 
   // Copilot State
   const [copilotQuestion, setCopilotQuestion] = useState<string>('How does the smart contract prevent double-counting under Paris Agreement Article 6?');
